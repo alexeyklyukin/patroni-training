@@ -40,7 +40,7 @@ apt-get install -y python-dev python-wheel python-pip --upgrade
 
 # install patroni and pg_view
 pip install setuptools pip --upgrade
-pip install patroni 'git+https://github.com/zalando/pg_view.git@master#egg=pg-view'
+pip install patroni[etcd] 'git+https://github.com/zalando/pg_view.git@master#egg=pg-view'
 pip install httpie --upgrade
 
 echo "PATH=\$PATH:/usr/lib/postgresql/10/bin" > /var/lib/postgresql/.profile
