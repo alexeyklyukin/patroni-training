@@ -36,11 +36,11 @@ curl -sL https://github.com/coreos/etcd/releases/download/v${ETCDVERSION}/etcd-v
  | tar xz -C /bin --strip=1 --wildcards --no-anchored etcdctl etcd
 
 # install pip
-apt-get install -y python-dev python-wheel python-pip --upgrade
+apt-get install -y python-dev python-wheel python-pip python-psycopg2 --upgrade
 
 # install patroni and pg_view
 pip install setuptools pip --upgrade
-pip install patroni 'git+https://github.com/zalando/pg_view.git@master#egg=pg-view'
+pip install patroni[etcd] 'git+https://github.com/zalando/pg_view.git@master#egg=pg-view'
 
 echo "PATH=\$PATH:/usr/lib/postgresql/10/bin" > /var/lib/postgresql/.profile
 mkdir -p /var/lib/postgresql/patroni
@@ -51,4 +51,5 @@ for i in {0..2}; do
     sed -i 's/^#\(\s*\(archive\|restore\|recovery\)_.*$\)/\1/g' postgres${i}.yml
 done
 chown -R postgres: /var/lib/postgresql/patroni
+etcd &>/tmp/etcd-logs/etcd.log &
 
