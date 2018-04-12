@@ -41,6 +41,7 @@ apt-get install -y python-dev python-wheel python-pip python-psycopg2 --upgrade
 # install patroni and pg_view
 pip install setuptools pip --upgrade
 pip install patroni[etcd] 'git+https://github.com/zalando/pg_view.git@master#egg=pg-view'
+pip install httpie --upgrade
 
 echo "PATH=\$PATH:/usr/lib/postgresql/10/bin" > /var/lib/postgresql/.profile
 mkdir -p /var/lib/postgresql/patroni
@@ -51,5 +52,4 @@ for i in {0..2}; do
     sed -i 's/^#\(\s*\(archive\|restore\|recovery\)_.*$\)/\1/g' postgres${i}.yml
 done
 chown -R postgres: /var/lib/postgresql/patroni
-etcd &>/tmp/etcd-logs/etcd.log &
-
+etcd &>/tmp/etcd.log &
