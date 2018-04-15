@@ -12,8 +12,8 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "ubuntu/xenial64"
-  config.vm.box_version = "20180410.0.0"
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.box_version = "20180413.0.0"
   ENV["LC_ALL"]      = "en_US.UTF-8"
 
   # Disable automatic box update checking. If you disable this, then

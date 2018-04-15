@@ -7,28 +7,18 @@ echo 'APT::Install-Suggests "0";' >> /etc/apt/apt.conf.d/01norecommend
 apt-get update
 apt-get upgrade -y
 
-apt-get install -y cron curl ca-certificates less locales jq vim git gcc gdb sudo strace
+apt-get install -y curl ca-certificates less locales jq vim git sudo
 
 ## Make sure we have a en_US.UTF-8 locale available
 localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
-
-export DISTRIB_CODENAME=$(sed -n 's/DISTRIB_CODENAME=//p' /etc/lsb-release)
-# Add PGDG repositories
-echo "deb http://apt.postgresql.org/pub/repos/apt/ ${DISTRIB_CODENAME}-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
-    && echo "deb-src http://apt.postgresql.org/pub/repos/apt/ ${DISTRIB_CODENAME}-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
-    && curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && apt-get update \
-    && apt-get install -y postgresql-common \
-    && sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
+apt-get install -y postgresql-common
+sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
 version=10
 
-# Install PostgreSQL binaries, contrib, plperl and plpython
-apt-get install --allow-downgrades -y postgresql-${version} postgresql-${version}-dbg \
-    postgresql-client-${version} postgresql-contrib-${version} \
-    postgresql-plpython-${version} postgresql-plperl-${version} \
-    libpq5=$version* libpq-dev=$version* postgresql-server-dev-${version}
+# Install PostgreSQL binaries and contrib
+apt-get install -y postgresql-${version} postgresql-client-${version} postgresql-contrib-${version}
 
 ETCDVERSION=2.3.7
 # install etcd
@@ -36,20 +26,27 @@ curl -sL https://github.com/coreos/etcd/releases/download/v${ETCDVERSION}/etcd-v
  | tar xz -C /bin --strip=1 --wildcards --no-anchored etcdctl etcd
 
 # install pip
-apt-get install -y python-dev python-wheel python-pip python-psycopg2 --upgrade
+apt-get install -y python3 python3-wheel python3-pip python3-psycopg2 python3-setuptools python3-etcd python3-psutil python3-requests python3-yaml python3-pygments python3-cdiff python3-idna python3-certifi python3-tz python3-click python3-prettytable python3-tzlocal python3-more-itertools python3-py python3-pluggy python3-dateutil
 
 # install patroni and pg_view
-pip install setuptools pip --upgrade
-pip install patroni[etcd] 'git+https://github.com/zalando/pg_view.git@master#egg=pg-view'
-pip install httpie --upgrade
+pip3 install httpie dumb-init 'git+https://github.com/zalando/patroni.git@master#egg=patroni[etcd]' 'git+https://github.com/zalando/pg_view.git@master#egg=pg-view'
 
-echo "PATH=\$PATH:/usr/lib/postgresql/10/bin" > /var/lib/postgresql/.profile
-mkdir -p /var/lib/postgresql/patroni
-cd /var/lib/postgresql/patroni
+# clean up
+rm -rf /var/lib/apt/lists/*
+
+echo "export PATH=\$PATH:/usr/lib/postgresql/10/bin
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+export EDITOR=vim" >> /etc/bash.bashrc
+
+cd /var/lib/postgresql
+
 for i in {0..2}; do
     curl -Os https://raw.githubusercontent.com/zalando/patroni/master/postgres${i}.yml
     # uncomment the archive and recovery commands and related options.
     sed -i 's/^#\(\s*\(archive\|restore\|recovery\)_.*$\)/\1/g' postgres${i}.yml
 done
-chown -R postgres: /var/lib/postgresql/patroni
+mkdir -p .config/patroni
+ln -s ../../postgres0.yml .config/patroni/patronictl.yaml
+chown -R postgres: .
 etcd &>/tmp/etcd.log &
