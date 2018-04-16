@@ -43,9 +43,10 @@ cd /var/lib/postgresql
 
 for i in {0..2}; do
     curl -Os https://raw.githubusercontent.com/zalando/patroni/master/postgres${i}.yml
-    # uncomment the archive and recovery commands and related options.
-    sed -i 's/^#\(\s*\(archive\|restore\|recovery\)_.*$\)/\1/g' postgres${i}.yml
 done
+# uncomment the archive and recovery commands and related options.
+sed -i 's/^#\(\s*\(archive\|restore\|recovery\)_.*$\)/\1/g' postgres?.yml
+sed 's/archive_mode:.*/max_connections: 100\n        &/' postgres?.yml
 mkdir -p .config/patroni
 ln -s ../../postgres0.yml .config/patroni/patronictl.yaml
 chown -R postgres: .
